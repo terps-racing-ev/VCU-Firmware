@@ -6,7 +6,7 @@
 # - entry_2
 
 # The project name
-target: VCU-Firmware
+target: VCU-Bootloader
 # Can be C or C++
 language: C
 

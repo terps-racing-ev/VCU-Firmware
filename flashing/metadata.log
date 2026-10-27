@@ -1,0 +1,29 @@
+Metadata read at 2026-09-25T23:23:04.628Z
+Command: C:\Users\adisa\AppData\Local\Python\bin\python.EXE c:\Users\adisa\Documents\Workspace\TREV\Code\VCU-Firmware\VCU-Firmware\flashing\F4-CAN-Flasher\flasher.py read --board-id 0 --channel PCAN_USBBUS1 --bitrate 500000
+Exit code: 0
+
+Configuration record for board ID 0:
+  magic              0x444D4C42 (1145916482)
+  format_version     0x00000001 (1)
+  record_size        0x0000004C (76)
+  sequence           0x0000000D (13)
+  board_id           0x00000000 (0)
+  active_slot        0x00000001 (1)
+  update_slot        0x00000001 (1)
+  transaction_state  0x00000002 (2)
+  valid_slots        0x00000003 (3)
+  image_size_a       0x00002414 (9236)
+  image_size_b       0x00002414 (9236)
+  image_crc32_a      0x35D2B314 (903000852)
+  image_crc32_b      0x534FF495 (1397748885)
+  image_version_a    0x00000000 (0)
+  image_version_b    0x00000001 (1)
+  reserved_0         0xFFFFFFFF (4294967295)
+  reserved_1         0xFFFFFFFF (4294967295)
+  record_crc32       0x9D17EE96 (2635591318)
+  commit_word        0x00000000 (0)
+Bootloader version: 1
+
+
+Errors:
+uptime library not available, timestamps are relative to boot time and not to Epoch UTC

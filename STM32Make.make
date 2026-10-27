@@ -54,6 +54,7 @@ BUILD_DIRECTORY ?= build
 
 # variable which determines if it is a debug build
 DEBUG ?= 1
+BUILD_VARIANT ?=
 
 # debug flags when debug is defined
 OPTIMIZATION ?= -Og
@@ -61,7 +62,7 @@ OPTIMIZATION ?= -Og
 RELEASE_DIRECTORY = $(BUILD_DIRECTORY)/debug
 ifeq ($(DEBUG),1)
   # Sets debugging optimization -Og and the debug information output
-  OPTIMIZATION_FLAGS += -Og -g -gdwarf -ggdb
+  OPTIMIZATION_FLAGS += -Og -g -gdwarf -ggdb -DDEBUG
   $(TARGET) := $(TARGET)-debug
   RELEASE_DIRECTORY := $(BUILD_DIRECTORY)/debug
 else
@@ -70,12 +71,25 @@ else
   RELEASE_DIRECTORY := $(BUILD_DIRECTORY)/release
 endif
 
+# Keep each bank's objects and outputs separate so the bank-specific linker
+# script and VECT_TAB_OFFSET always apply to every compiled source file.
+ifneq ($(strip $(BUILD_VARIANT)),)
+  TARGET := $(TARGET)-$(BUILD_VARIANT)
+  RELEASE_DIRECTORY := $(RELEASE_DIRECTORY)/$(BUILD_VARIANT)
+endif
+
 ######################################
 # source
 ######################################
 # C sources
 C_SOURCES =  \
 Core/Src/main.c \
+Core/Src/data/can.c \
+Core/Src/data/config.c \
+Core/Src/managers/io_manager.c \
+Core/Src/managers/can_manager.c \
+Core/Src/managers/config_manager.c \
+Core/Src/drivers/eeprom.c \
 Core/Src/stm32f4xx_hal_msp.c \
 Core/Src/stm32f4xx_it.c \
 Core/Src/syscalls.c \
@@ -209,6 +223,12 @@ CFLAGS += -Wall -fdata-sections -ffunction-sections
 ASFLAGS += -Wall -fdata-sections -ffunction-sections 
 CXXFLAGS += -fno-exceptions -fno-rtti 
 
+ifneq ($(strip $(VECT_TAB_OFFSET)),)
+CFLAGS += -DVECT_TAB_OFFSET=$(VECT_TAB_OFFSET)
+CXXFLAGS += -DVECT_TAB_OFFSET=$(VECT_TAB_OFFSET)
+ASFLAGS += -DVECT_TAB_OFFSET=$(VECT_TAB_OFFSET)
+endif
+
 # Generate dependency information
 CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
 CXXFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
@@ -261,7 +281,23 @@ vpath %.S $(sort $(dir $(ASM_SOURCES)))
 #######################################
 # note needs to be located as the first rule to be the default build rule
 # default action: build all
-all: $(RELEASE_DIRECTORY)/$(TARGET).elf $(RELEASE_DIRECTORY)/$(TARGET).hex $(RELEASE_DIRECTORY)/$(TARGET).bin $(RELEASE_DIRECTORY)/$(TARGET).lss 
+ifeq ($(strip $(BUILD_VARIANT)),)
+.PHONY: all bank-a bank-b
+all: bank-a bank-b
+
+# Bank A uses sectors 5 and 6.
+bank-a:
+	$(MAKE) -f STM32Make.make BUILD_VARIANT=bank-a LDSCRIPT=STM32F405_Sectors_5_6.ld VECT_TAB_OFFSET=0x20000 firmware-image
+
+# Bank B uses sectors 7 and 8.
+bank-b:
+	$(MAKE) -f STM32Make.make BUILD_VARIANT=bank-b LDSCRIPT=STM32F405_Sectors_7_8.ld VECT_TAB_OFFSET=0x60000 firmware-image
+else
+.PHONY: all firmware-image
+all: firmware-image
+endif
+
+firmware-image: $(RELEASE_DIRECTORY)/$(TARGET).elf $(RELEASE_DIRECTORY)/$(TARGET).hex $(RELEASE_DIRECTORY)/$(TARGET).bin $(RELEASE_DIRECTORY)/$(TARGET).lss
 
 
 # C build
@@ -299,9 +335,14 @@ $(RELEASE_DIRECTORY)/%.o: %.S STM32Make.make | $(RELEASE_DIRECTORY)
 
 $(RELEASE_DIRECTORY)/%.o: %.sx STM32Make.make | $(RELEASE_DIRECTORY)
 	$(AS) -c $(ASFLAGS) $< -o $@
+#defines a new line
+define \n
+
+
+endef
 
 $(RELEASE_DIRECTORY)/$(TARGET).elf: $(OBJECTS) STM32Make.make | $(RELEASE_DIRECTORY)
-	@echo $(OBJECTS) > $@.in
+	$(file >$@.in,$(foreach obj,$(OBJECTS),$(obj)$(\n)))
 	$(CC) @$@.in $(LDFLAGS) -o $@
 	$(SZ) $@
 
@@ -324,8 +365,15 @@ $(BUILD_DIRECTORY): | $(RELEASE_DIRECTORY)
 #######################################
 # flash
 #######################################
+ifeq ($(strip $(BUILD_VARIANT)),)
+flash: all
+	"$(OPENOCD)" -f ./openocd.cfg -c "program $(RELEASE_DIRECTORY)/bank-a/$(TARGET)-bank-a.elf verify; program $(RELEASE_DIRECTORY)/bank-b/$(TARGET)-bank-b.elf verify; reset; exit"
+else
 flash: all
 	"$(OPENOCD)" -f ./openocd.cfg -c "program $(RELEASE_DIRECTORY)/$(TARGET).elf verify reset exit"
+endif
+
+
 
 #######################################
 # erase

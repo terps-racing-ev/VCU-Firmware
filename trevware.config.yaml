@@ -1,0 +1,11 @@
+# ID of board this is for
+board_id: 0
+
+# CAN ID to reset a board
+reset_msg_can_id: 0
+
+# Version number
+firmware_version: 0
+
+# Supports CAN flashing
+can_flashing_supported: false

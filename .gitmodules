@@ -1,0 +1,3 @@
+[submodule "flashing/F4-CAN-Flasher"]
+	path = flashing/F4-CAN-Flasher
+	url = https://github.com/terps-racing-ev/F4-CAN-Flasher
