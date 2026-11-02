@@ -5,8 +5,8 @@
 #define EEPROM_PAGE_0_ADDRESS 0x080A0000U
 #define EEPROM_PAGE_1_ADDRESS 0x080C0000U
 #define EEPROM_HEADER_SIZE 16U
-#define EEPROM_RECORD_SIZE 12U
-#define EEPROM_MAGIC 0x45455031U
+#define EEPROM_RECORD_SIZE 8U
+#define EEPROM_MAGIC 0x45455032U
 #define EEPROM_ERASED 0xFFFFFFFFU
 #define EEPROM_COMMITTED 0U
 
@@ -25,7 +25,7 @@ static const uint32_t EEPROM_PageSectors[2] = {
   FLASH_SECTOR_9, FLASH_SECTOR_10
 };
 
-static uint32_t EEPROM_Values[EEPROM_VARIABLE_COUNT];
+static uint16_t EEPROM_Values[EEPROM_VARIABLE_COUNT];
 static uint8_t EEPROM_Present[EEPROM_VARIABLE_COUNT];
 static uint32_t EEPROM_ActivePage;
 static uint32_t EEPROM_NextAddress;
@@ -113,14 +113,14 @@ static HAL_StatusTypeDef EEPROM_StartPage(uint32_t page, uint32_t generation)
 }
 
 static HAL_StatusTypeDef EEPROM_AppendRecord(uint32_t address, uint16_t virtualAddress,
-                                           uint32_t value)
+                                           uint16_t value)
 {
+  uint32_t data = ((uint32_t)(uint16_t)~value << 16U) | value;
   uint32_t tag = ((uint32_t)(uint16_t)~virtualAddress << 16U) | virtualAddress;
 
-  /* Data and its inverse are written before the address commits the record. */
-  if (EEPROM_ProgramWord(address, value) != HAL_OK ||
-      EEPROM_ProgramWord(address + 4U, ~value) != HAL_OK ||
-      EEPROM_ProgramWord(address + 8U, tag) != HAL_OK)
+  /* Each word packs a 16-bit field and its inverse. The address commits it. */
+  if (EEPROM_ProgramWord(address, data) != HAL_OK ||
+      EEPROM_ProgramWord(address + 4U, tag) != HAL_OK)
   {
     return HAL_ERROR;
   }
@@ -142,20 +142,20 @@ static void EEPROM_LoadPage(void)
   for (uint32_t address = start; address + EEPROM_RECORD_SIZE <= end;
        address += EEPROM_RECORD_SIZE)
   {
-    uint32_t value = EEPROM_ReadWord(address);
-    uint32_t inverse = EEPROM_ReadWord(address + 4U);
-    uint32_t tag = EEPROM_ReadWord(address + 8U);
+    uint32_t data = EEPROM_ReadWord(address);
+    uint32_t tag = EEPROM_ReadWord(address + 4U);
+    uint16_t value = (uint16_t)data;
     uint16_t virtualAddress = (uint16_t)tag;
 
     /* Consume torn records too; flash slots cannot be overwritten. */
-    if (value != EEPROM_ERASED || inverse != EEPROM_ERASED || tag != EEPROM_ERASED)
+    if (data != EEPROM_ERASED || tag != EEPROM_ERASED)
     {
       EEPROM_NextAddress = address + EEPROM_RECORD_SIZE;
     }
 
     if (virtualAddress < EEPROM_VARIABLE_COUNT &&
         (uint16_t)(tag >> 16U) == (uint16_t)~virtualAddress &&
-        (value ^ inverse) == EEPROM_ERASED)
+        (uint16_t)(data >> 16U) == (uint16_t)~value)
     {
       EEPROM_Values[virtualAddress] = value;
       EEPROM_Present[virtualAddress] = 1U;
@@ -163,7 +163,7 @@ static void EEPROM_LoadPage(void)
   }
 }
 
-static HAL_StatusTypeDef EEPROM_TransferPage(uint16_t virtualAddress, uint32_t value)
+static HAL_StatusTypeDef EEPROM_TransferPage(uint16_t virtualAddress, uint16_t value)
 {
   uint32_t page = EEPROM_ActivePage ^ 1U;
   uint32_t base = EEPROM_PageAddresses[page];
@@ -293,7 +293,7 @@ EEPROM_StatusTypeDef EEPROM_Init(void)
   return EEPROM_OK;
 }
 
-EEPROM_StatusTypeDef EEPROM_ReadVariable(uint16_t virtualAddress, uint32_t *value)
+EEPROM_StatusTypeDef EEPROM_ReadVariable(uint16_t virtualAddress, uint16_t *value)
 {
   if (virtualAddress >= EEPROM_VARIABLE_COUNT || value == NULL)
   {
@@ -312,7 +312,7 @@ EEPROM_StatusTypeDef EEPROM_ReadVariable(uint16_t virtualAddress, uint32_t *valu
   return EEPROM_OK;
 }
 
-EEPROM_StatusTypeDef EEPROM_WriteVariable(uint16_t virtualAddress, uint32_t value)
+EEPROM_StatusTypeDef EEPROM_WriteVariable(uint16_t virtualAddress, uint16_t value)
 {
   if (virtualAddress >= EEPROM_VARIABLE_COUNT)
   {

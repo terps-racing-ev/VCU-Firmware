@@ -15,8 +15,9 @@ typedef enum
 } EEPROM_StatusTypeDef;
 
 /*
- * Flash-backed virtual variables, addresses 0..EEPROM_VARIABLE_COUNT-1,
- * with 32-bit values. Sectors 9 and 10 (0x080A0000..0x080DFFFF) must be kept
+ * Flash-backed virtual variables with 16-bit addresses and values. Valid
+ * addresses are 0..EEPROM_VARIABLE_COUNT-1. Sectors 9 and 10
+ * (0x080A0000..0x080DFFFF) must be kept
  * exclusively for this driver. Linker scripts are unchanged; init checks the
  * firmware load addresses for overlap. Do not place other storage in these
  * sectors. Programming assumes a 2.7-3.6 V supply.
@@ -34,9 +35,9 @@ typedef enum
 EEPROM_StatusTypeDef EEPROM_Init(void);
 
 /* On failure, *value is unchanged. Unwritten variables return NOT_FOUND. */
-EEPROM_StatusTypeDef EEPROM_ReadVariable(uint16_t virtualAddress, uint32_t *value);
+EEPROM_StatusTypeDef EEPROM_ReadVariable(uint16_t virtualAddress, uint16_t *value);
 
-/* Unchanged values do not consume flash writes. All 32-bit values are valid. */
-EEPROM_StatusTypeDef EEPROM_WriteVariable(uint16_t virtualAddress, uint32_t value);
+/* Unchanged values do not consume flash writes. All 16-bit values are valid. */
+EEPROM_StatusTypeDef EEPROM_WriteVariable(uint16_t virtualAddress, uint16_t value);
 
 #endif /* EEPROM_H */

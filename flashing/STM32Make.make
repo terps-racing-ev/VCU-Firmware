@@ -65,11 +65,11 @@ RELEASE_DIRECTORY = $(BUILD_DIRECTORY)/debug
 ifeq ($(DEBUG),1)
   # Sets debugging optimization -Og and the debug information output
   OPTIMIZATION_FLAGS += -Og -g -gdwarf -ggdb -DDEBUG
-  $(TARGET) := $(TARGET)-debug
+  # Keep bank image names stable across build modes.
   RELEASE_DIRECTORY := $(BUILD_DIRECTORY)/debug
 else
   OPTIMIZATION_FLAGS += $(OPTIMIZATION)
-  $(TARGET) := $(TARGET)-release
+  # Keep bank image names stable across build modes.
   RELEASE_DIRECTORY := $(BUILD_DIRECTORY)/release
 endif
 
@@ -87,12 +87,13 @@ endif
 C_SOURCES =  \
 Core/Src/data/can.c \
 Core/Src/data/config.c \
+Core/Src/drivers/bootloader.c \
+Core/Src/drivers/eeprom.c \
 Core/Src/freertos.c \
 Core/Src/main.c \
 Core/Src/managers/can_manager.c \
 Core/Src/managers/config_manager.c \
 Core/Src/managers/io_manager.c \
-Core/Src/drivers/eeprom.c \
 Core/Src/stm32f4xx_hal_msp.c \
 Core/Src/stm32f4xx_hal_timebase_tim.c \
 Core/Src/stm32f4xx_it.c \
@@ -222,6 +223,7 @@ AS_INCLUDES = \
 C_INCLUDES =  \
 -ICore/Inc \
 -ICore/Inc/data \
+-ICore/Inc/drivers \
 -ICore/Inc/managers \
 -IDrivers/CMSIS/Device/ST/STM32F4xx/Include \
 -IDrivers/CMSIS/Include \
@@ -303,7 +305,27 @@ vpath %.S $(sort $(dir $(ASM_SOURCES)))
 #######################################
 # note needs to be located as the first rule to be the default build rule
 # default action: build all
-all: $(RELEASE_DIRECTORY)/$(TARGET).elf $(RELEASE_DIRECTORY)/$(TARGET).hex $(RELEASE_DIRECTORY)/$(TARGET).bin $(RELEASE_DIRECTORY)/$(TARGET).lss
+ifeq ($(strip $(BUILD_VARIANT)),)
+.PHONY: all standard bank-a bank-b
+all: standard bank-a bank-b
+
+# Standard firmware uses the project's original linker script and startup source.
+standard:
+	$(MAKE) -f flashing/STM32Make.make BUILD_VARIANT=standard firmware-image
+
+# Bank A (sectors 5 and 6).
+bank-a:
+	$(MAKE) -f flashing/STM32Make.make BUILD_VARIANT=bank-a LDSCRIPT=flashing/STM32F405_Sectors_5_6.ld VECT_TAB_OFFSET=0x20000 firmware-image
+
+# Bank B (sectors 7 and 8).
+bank-b:
+	$(MAKE) -f flashing/STM32Make.make BUILD_VARIANT=bank-b LDSCRIPT=flashing/STM32F405_Sectors_7_8.ld VECT_TAB_OFFSET=0x60000 firmware-image
+else
+.PHONY: all firmware-image
+all: firmware-image
+endif
+
+firmware-image: $(RELEASE_DIRECTORY)/$(TARGET).elf $(RELEASE_DIRECTORY)/$(TARGET).hex $(RELEASE_DIRECTORY)/$(TARGET).bin $(RELEASE_DIRECTORY)/$(TARGET).lss
 
 
 # C build
@@ -371,8 +393,15 @@ $(BUILD_DIRECTORY): | $(RELEASE_DIRECTORY)
 #######################################
 # flash
 #######################################
+ifeq ($(strip $(BUILD_VARIANT)),)
+flash: all
+	"$(OPENOCD)" -f flashing/openocd.cfg -c "program $(RELEASE_DIRECTORY)/bank-a/$(TARGET)-bank-a.elf verify; program $(RELEASE_DIRECTORY)/bank-b/$(TARGET)-bank-b.elf verify; reset; exit"
+else
 flash: all
 	"$(OPENOCD)" -f flashing/openocd.cfg -c "program $(RELEASE_DIRECTORY)/$(TARGET).elf verify reset exit"
+endif
+
+
 
 #######################################
 # erase

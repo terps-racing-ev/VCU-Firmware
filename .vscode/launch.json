@@ -3,7 +3,7 @@
         {
             "showDevDebugOutput": "parsed",
             "cwd": "${workspaceRoot}",
-            "executable": "./build/debug/VCU-Firmware.elf",
+            "executable": "./build/debug/bank-a/VCU-Firmware-bank-a.elf",
             "name": "Debug STM32",
             "request": "launch",
             "type": "cortex-debug",
@@ -17,7 +17,7 @@
         {
             "showDevDebugOutput": "parsed",
             "cwd": "${workspaceRoot}",
-            "executable": "./build/debug/VCU-Firmware.elf",
+            "executable": "./build/debug/bank-a/VCU-Firmware-bank-a.elf",
             "name": "Attach STM32",
             "request": "attach",
             "type": "cortex-debug",

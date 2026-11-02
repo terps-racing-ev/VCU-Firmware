@@ -26,14 +26,15 @@ from unicorn.arm_const import (
 ROOT = Path(__file__).resolve().parents[1]
 PAGE_SIZE = 0x20000
 BASE = 0x080A0000
-MAGIC = 0x45455031
-CAPACITY = (PAGE_SIZE - 16) // 12
+MAGIC = 0x45455032
+RECORD_SIZE = 8
+CAPACITY = (PAGE_SIZE - 16) // RECORD_SIZE
 ERASED = b"\xff" * (2 * PAGE_SIZE)
 OK, NOT_FOUND, INVALID, NOT_INITIALIZED, FLASH_ERROR = range(5)
 
 
 def record(address, value):
-    return struct.pack("<III", value, value ^ 0xFFFFFFFF,
+    return struct.pack("<II", ((value ^ 0xFFFF) << 16) | value,
                        ((address ^ 0xFFFF) << 16) | address)
 
 
@@ -41,7 +42,8 @@ def full_page(generation):
     page = bytearray(b"\xff" * PAGE_SIZE)
     struct.pack_into("<IIII", page, 0, MAGIC, generation, generation ^ 0xFFFFFFFF, 0)
     for index in range(CAPACITY):
-        page[16 + index * 12:28 + index * 12] = record(index % 256, index)
+        offset = 16 + index * RECORD_SIZE
+        page[offset:offset + RECORD_SIZE] = record(index % 256, index)
     return bytes(page)
 
 
@@ -140,7 +142,9 @@ class FlashMachine:
         output = 0x20018000
         self.uc.mem_write(output, struct.pack("<I", 0x12345678))
         status = self.call("EEPROM_ReadVariable", address, output)
-        return status, struct.unpack("<I", self.uc.mem_read(output, 4))[0]
+        value, guard = struct.unpack("<HH", self.uc.mem_read(output, 4))
+        assert guard == 0x1234, "read wrote beyond the 16-bit output"
+        return status, value
 
     def snapshot(self):
         return bytes(self.uc.mem_read(BASE, 2 * PAGE_SIZE))
@@ -154,34 +158,34 @@ class EEPROMTests(unittest.TestCase):
 
     def test_read_write_reboot_and_arguments(self):
         machine = self.machine()
-        self.assertEqual(machine.read(0), (NOT_INITIALIZED, 0x12345678))
+        self.assertEqual(machine.read(0), (NOT_INITIALIZED, 0x5678))
         self.assertEqual(machine.call("EEPROM_WriteVariable", 0, 42), NOT_INITIALIZED)
         self.assertEqual(machine.call("EEPROM_Init"), OK)
-        self.assertEqual(machine.read(0), (NOT_FOUND, 0x12345678))
-        self.assertEqual(machine.read(256), (INVALID, 0x12345678))
+        self.assertEqual(machine.read(0), (NOT_FOUND, 0x5678))
+        self.assertEqual(machine.read(256), (INVALID, 0x5678))
         self.assertEqual(machine.call("EEPROM_ReadVariable", 0, 0), INVALID)
         self.assertEqual(machine.call("EEPROM_WriteVariable", 256, 42), INVALID)
         for address in range(256):
             self.assertEqual(machine.call("EEPROM_WriteVariable", address, address * 17), OK)
-        for value in (0, 0xFFFFFFFF, 0x98765432):
+        for value in (0, 0xFFFF, 0x9876):
             self.assertEqual(machine.call("EEPROM_WriteVariable", 255, value), OK)
             self.assertEqual(machine.read(255), (OK, value))
         before = machine.operations
-        self.assertEqual(machine.call("EEPROM_WriteVariable", 255, 0x98765432), OK)
+        self.assertEqual(machine.call("EEPROM_WriteVariable", 255, 0x9876), OK)
         self.assertEqual(machine.operations, before)
         reboot = self.machine(machine.snapshot())
         self.assertEqual(reboot.call("EEPROM_Init"), OK)
         for address in range(255):
             self.assertEqual(reboot.read(address), (OK, address * 17))
-        self.assertEqual(reboot.read(255), (OK, 0x98765432))
+        self.assertEqual(reboot.read(255), (OK, 0x9876))
         self.assertTrue(machine.locked)
 
     def test_rollover_preserves_all_variables(self):
         machine = self.machine(full_page(7) + b"\xff" * PAGE_SIZE)
         self.assertEqual(machine.call("EEPROM_Init"), OK)
         expected = {index % 256: index for index in range(CAPACITY)}
-        self.assertEqual(machine.call("EEPROM_WriteVariable", 3, 0xDEADBEEF), OK)
-        expected[3] = 0xDEADBEEF
+        self.assertEqual(machine.call("EEPROM_WriteVariable", 3, 0xBEEF), OK)
+        expected[3] = 0xBEEF
         for address, value in expected.items():
             self.assertEqual(machine.read(address), (OK, value))
         reboot = self.machine(machine.snapshot())
@@ -197,7 +201,7 @@ class EEPROMTests(unittest.TestCase):
         self.assertEqual(original.call("EEPROM_WriteVariable", 7, 123), OK)
         snapshot = original.snapshot()
         for partial in (False, True):
-            for operation in range(1, 4):
+            for operation in range(1, 3):
                 with self.subTest(partial=partial, operation=operation):
                     machine = self.machine(snapshot)
                     self.assertEqual(machine.call("EEPROM_Init"), OK)
@@ -222,7 +226,7 @@ class EEPROMTests(unittest.TestCase):
                         machine.call("EEPROM_Init")
                     reboot = self.machine(machine.snapshot())
                     self.assertEqual(reboot.call("EEPROM_Init"), OK)
-                    self.assertEqual(reboot.read(0), (NOT_FOUND, 0x12345678))
+                    self.assertEqual(reboot.read(0), (NOT_FOUND, 0x5678))
 
     def test_transfer_power_cuts_and_retry(self):
         # Both pages valid: the older destination must be safely erased first.
@@ -230,7 +234,7 @@ class EEPROMTests(unittest.TestCase):
         expected = {index % 256: index for index in range(CAPACITY)}
         complete = self.machine(snapshot)
         self.assertEqual(complete.call("EEPROM_Init"), OK)
-        self.assertEqual(complete.call("EEPROM_WriteVariable", 9, 99999), OK)
+        self.assertEqual(complete.call("EEPROM_WriteVariable", 9, 59999), OK)
         total = complete.operations
         # Cover erase, each header word, early/middle/late copy, and page commit.
         for partial in (False, True):
@@ -241,7 +245,7 @@ class EEPROMTests(unittest.TestCase):
                     machine.cut_at = operation
                     machine.partial_cut = partial
                     with self.assertRaises(PowerCut):
-                        machine.call("EEPROM_WriteVariable", 9, 99999)
+                        machine.call("EEPROM_WriteVariable", 9, 59999)
                     reboot = self.machine(machine.snapshot())
                     self.assertEqual(reboot.call("EEPROM_Init"), OK)
                     for address, value in expected.items():
@@ -253,13 +257,13 @@ class EEPROMTests(unittest.TestCase):
         snapshot = full_page(0xFFFFFFFF) + full_page(0xFFFFFFFE)
         machine = self.machine(snapshot)
         self.assertEqual(machine.call("EEPROM_Init"), OK)
-        self.assertEqual(machine.call("EEPROM_WriteVariable", 8, 88888), OK)
+        self.assertEqual(machine.call("EEPROM_WriteVariable", 8, 58888), OK)
         reboot = self.machine(machine.snapshot())
         self.assertEqual(reboot.call("EEPROM_Init"), OK)
-        self.assertEqual(reboot.read(8), (OK, 88888))
+        self.assertEqual(reboot.read(8), (OK, 58888))
 
     def test_flash_failures_relock_and_require_init(self):
-        for operation in (1, 2, 3):
+        for operation in (1, 2):
             with self.subTest(operation=operation):
                 machine = self.machine()
                 self.assertEqual(machine.call("EEPROM_Init"), OK)

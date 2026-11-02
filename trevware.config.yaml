@@ -8,4 +8,4 @@ reset_msg_can_id: 0
 firmware_version: 0
 
 # Supports CAN flashing
-can_flashing_supported: false
+can_flashing_supported: true

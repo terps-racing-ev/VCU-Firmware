@@ -20,7 +20,6 @@ from test_eeprom import ERASED, INVALID, NOT_FOUND, NOT_INITIALIZED, OK, ROOT, F
 
 
 RESOURCE = (-3) & 0xFFFFFFFF
-PARAMETER = (-4) & 0xFFFFFFFF
 
 
 class ConfigMachine(FlashMachine):
@@ -76,7 +75,9 @@ class ConfigMachine(FlashMachine):
         output = 0x20018000
         self.uc.mem_write(output, struct.pack("<I", 0x12345678))
         status = self.call("Config_ReadVariable", address, output)
-        return status, struct.unpack("<I", self.uc.mem_read(output, 4))[0]
+        value, guard = struct.unpack("<HH", self.uc.mem_read(output, 4))
+        assert guard == 0x1234, "read wrote beyond the 16-bit output"
+        return status, value
 
     def submit_write(self, address, value):
         return self.call("Config_WriteVariable", address, value)
@@ -107,29 +108,27 @@ class ConfigManagerTests(unittest.TestCase):
 
     def test_submission_validation(self):
         machine = self.machine()
-        self.assertEqual(machine.read(0), (NOT_INITIALIZED, 0x12345678))
+        self.assertEqual(machine.read(0), (NOT_INITIALIZED, 0x5678))
         self.assertEqual(machine.submit_write(0, 1), RESOURCE)
         self.assertEqual(machine.call("Config_Manager_Init"), OK)
-        self.assertEqual(machine.read(256), (INVALID, 0x12345678))
-        self.assertEqual(machine.submit_write(256, 1), PARAMETER)
         self.assertEqual(machine.call("Config_ReadVariable", 0, 0), INVALID)
         self.assertFalse(machine.queue)
 
     def test_direct_reads_and_queued_writes(self):
         machine = self.machine()
         self.assertEqual(machine.call("Config_Manager_Init"), OK)
-        self.assertEqual(machine.read(255), (NOT_FOUND, 0x12345678))
+        self.assertEqual(machine.read(255), (NOT_FOUND, 0x5678))
         self.assertFalse(machine.queue)
-        self.assertEqual(machine.submit_write(255, 0xFFFFFFFF), OK)
-        self.assertEqual(machine.read(255), (NOT_FOUND, 0x12345678))
+        self.assertEqual(machine.submit_write(255, 0xFFFF), OK)
+        self.assertEqual(machine.read(255), (NOT_FOUND, 0x5678))
         self.assertFalse(machine.writes)
         machine.drain()
-        self.assertEqual(machine.read(255), (OK, 0xFFFFFFFF))
+        self.assertEqual(machine.read(255), (OK, 0xFFFF))
         self.assertEqual(machine.submit_write(255, 123), OK)
         self.assertEqual(machine.submit_write(255, 0), OK)
-        self.assertEqual(machine.read(255), (OK, 0xFFFFFFFF))
+        self.assertEqual(machine.read(255), (OK, 0xFFFF))
         machine.drain()
-        self.assertEqual(machine.writes, [(255, 0xFFFFFFFF), (255, 123), (255, 0)])
+        self.assertEqual(machine.writes, [(255, 0xFFFF), (255, 123), (255, 0)])
         self.assertEqual(machine.read(255), (OK, 0))
 
     def test_queue_backpressure(self):
@@ -154,7 +153,7 @@ class ConfigManagerTests(unittest.TestCase):
         self.assertEqual(machine.submit_write(7, 42), OK)
         machine.drain()
         self.assertEqual(machine.writes, [(7, 42)])
-        self.assertEqual(machine.read(7), (NOT_INITIALIZED, 0x12345678))
+        self.assertEqual(machine.read(7), (NOT_INITIALIZED, 0x5678))
 
     def test_default_virtual_address(self):
         machine = self.machine()

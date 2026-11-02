@@ -4,6 +4,7 @@
 #include "cmsis_os.h"
 #include "data/can.h"
 #include "main.h"
+#include "managers/config_manager.h"
 
 #define MAX_TX_RETRIES 3U
 #define CAN_RX_QUEUE_LENGTH 16U
@@ -13,8 +14,10 @@ extern osMessageQueueId_t DAQ_CAN_RxQueueHandle;
 extern osMessageQueueId_t CTRL_CAN_TxQueueHandle;
 extern osMessageQueueId_t DAQ_CAN_TxQueueHandle;
 
-static const CANMessageHandler CAN_RxHandlers = {};
-#define CAN_RxHandlers_Size (sizeof(CAN_RxHandlers)/sizeof(CANMessageHandler))
+static const CAN_RxHandler CAN_RxHandlers[] = {
+    Config_RxHandler
+};
+#define CAN_RxHandlers_Size (sizeof(CAN_RxHandlers)/sizeof(CAN_RxHandler))
 
 HAL_StatusTypeDef CTRL_CAN_ManagerInit(void);
 HAL_StatusTypeDef DAQ_CAN_ManagerInit(void);

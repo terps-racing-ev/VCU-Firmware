@@ -4,12 +4,19 @@
 #include "cmsis_os.h"
 #include <stdint.h>
 
+/* CAN IDs */
+#define CAN_CONFIG_CMD        0xC0
+#define CAN_CONFIG_REPLY      0xC1
+
+
+
+
 typedef struct
 {
   uint32_t id;
   uint8_t length;
   uint8_t data[8];
-} CANMessage;
+} CAN_Message_t;
 
 /* CAN Statistics Structure */
 typedef struct {
@@ -24,9 +31,9 @@ typedef struct {
     uint32_t rx_invalid_count;      // Invalid RX frames dropped
 } CAN_Statistics_t;
 
-typedef void (*CANMessageHandler)(const CANMessage *message);
+typedef bool (*CAN_RxHandler)(const CAN_Message_t *message);
 
-osStatus_t CAN_SendCTRLMsg(const CANMessage *message);
-osStatus_t CAN_SendDAQMsg(const CANMessage *message);
+osStatus_t CAN_SendCTRLMsg(const CAN_Message_t *message);
+osStatus_t CAN_SendDAQMsg(const CAN_Message_t *message);
 
 #endif /* DATA_CAN_H */

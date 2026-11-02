@@ -5,6 +5,7 @@
       "includePath": [
         "Core/Inc",
         "Core/Inc/data",
+        "Core/Inc/drivers",
         "Core/Inc/managers",
         "Drivers/CMSIS/Device/ST/STM32F4xx/Include",
         "Drivers/CMSIS/Include",
