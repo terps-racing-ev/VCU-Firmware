@@ -2,6 +2,7 @@
 #include "data/can.h"
 #include "managers/can_manager.h"
 #include "main.h"
+#include "config.h"
 
 extern CAN_HandleTypeDef hcan1;
 extern CAN_HandleTypeDef hcan2;
@@ -138,7 +139,15 @@ void CTRL_CAN_Manager_Task(void *argument)
       }
     }
 
-    osDelay(1U);
+    CAN_Message_t msg = {
+    .id = 0,
+    .length = 0
+    };
+    CAN_SendCTRLMsg(&msg);
+
+    uint16_t delay;
+    Config_ReadVariable(CONFIG_CTRL_CAN_MANAGER_DELAY_MS, &delay);
+    osDelay(delay);
   }
 }
 
@@ -185,7 +194,10 @@ void DAQ_CAN_Manager_Task(void *argument)
         CAN_RxHandlers[i](&message);
       }
     }
-    osDelay(1U);
+
+    uint16_t delay;
+    Config_ReadVariable(CONFIG_DAQ_CAN_MANAGER_DELAY_MS, &delay);
+    osDelay(delay);
   }
 }
 

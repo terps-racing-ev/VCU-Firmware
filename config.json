@@ -1,0 +1,33 @@
+{
+    "board_id": 0,
+    "values": [
+        {
+            "name": "Default Value",
+            "address": 0,
+            "default_value": 0,
+            "min_value": 0,
+            "max_value": 0
+        },
+        {
+            "name": "CTRL CAN Manager Task Delay (ms)",
+            "address": 1,
+            "default_value": 10,
+            "min_value": 0,
+            "max_value": 255
+        },
+        {
+            "name": "DAQ CAN Manager Task Delay (ms)",
+            "address": 2,
+            "default_value": 10,
+            "min_value": 0,
+            "max_value": 255
+        },
+        {
+            "name": "Config Manager Task Delay (ms)",
+            "address": 3,
+            "default_value": 10,
+            "min_value": 0,
+            "max_value": 255
+        }
+    ]
+}

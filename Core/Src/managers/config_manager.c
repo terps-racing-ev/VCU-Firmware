@@ -4,13 +4,13 @@
 
 typedef struct
 {
-    uint8_t virtualAddress;
-    uint16_t value;
+  uint8_t virtualAddress;
+  uint16_t value;
 } Config_WriteRequest_t;
 
 typedef struct
 {
-    uint8_t virtualAddress;
+  uint8_t virtualAddress;
 } Config_ReadRequest_t;
 
 osMessageQueueId_t Config_WriteQueueHandle;
@@ -67,7 +67,8 @@ void Config_Manager_Task(void *argument)
   {
     while (osMessageQueueGet(Config_WriteQueueHandle, &w_req, NULL, 1U) == osOK)
     {
-      EEPROM_StatusTypeDef status = EEPROM_WriteVariable(w_req.virtualAddress, w_req.value);
+      
+      EEPROM_StatusTypeDef status = Config_WriteVariable(w_req.virtualAddress, w_req.value);
       Config_PackWriteReply(&msg, w_req.virtualAddress, status);
 
       // Send on both CAN busses since we don't know which it came from
@@ -78,7 +79,7 @@ void Config_Manager_Task(void *argument)
     while (osMessageQueueGet(Config_ReadQueueHandle, &r_req, NULL, 1U) == osOK)
     {
       uint16_t value;
-      EEPROM_StatusTypeDef status = EEPROM_ReadVariable(r_req.virtualAddress, &value);
+      EEPROM_StatusTypeDef status = Config_ReadVariable(r_req.virtualAddress, &value);
       Config_PackReadReply(&msg, r_req.virtualAddress, status, value);
 
       // Send on both CAN busses since we don't know which it came from
@@ -86,15 +87,10 @@ void Config_Manager_Task(void *argument)
       CAN_SendDAQMsg(&msg);
     }
 
-    // TODO: remove (debug msg)
-    CAN_SendCTRLMsg(&msg);
-    osDelay(1);
+    uint16_t delay;
+    Config_ReadVariable(CONFIG_CONFIG_MANAGER_DELAY_MS, &delay);
+    osDelay(delay);
   }
-}
-
-EEPROM_StatusTypeDef Config_ReadVariable(uint8_t virtualAddress, uint16_t *value)
-{
-  return EEPROM_ReadVariable(virtualAddress, value);
 }
 
 bool Config_RxHandler(const CAN_Message_t *msg) {
