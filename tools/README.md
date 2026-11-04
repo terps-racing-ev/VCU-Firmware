@@ -1,3 +1,57 @@
+# Config editor GUI
+
+`pcan_config.py` loads the repository root's `config.json` and displays every
+setting's address, name, default, allowed range, last board value, and editable
+new value. It uses Tkinter and `python-can`, with the same PEAK PCAN driver as
+the other tools.
+
+```powershell
+py -m pip install python-can
+py tools/pcan_config.py
+```
+
+Choose the PCAN channel, bitrate, and target board ID, then click **Connect**.
+The board ID initially comes from `config.json`; changing it selects the target
+board and does not change the board's bootloader ID. Connection only opens the
+adapter; it does not confirm that the board is responding or send config messages.
+
+Click **Read all**, or a row's **Read**, to fetch board values. Enter a new value
+and click that row's **Write** to persist it in EEPROM. Values accept decimal
+or `0x` hexadecimal. Before sending, the editor checks that the input is a whole
+number within the setting's JSON min/max and the protocol's unsigned 16-bit
+range. The JSON schema itself is validated at startup, including board/address
+bounds, duplicate addresses, and defaults. The tool does not edit `config.json`.
+
+Writes wait for an acknowledgement and never automatically read back or retry.
+Click **Read** to verify a write. Board values remain separate from editable
+values; reads preserve any value you have manually edited. A failed read shows
+an error on that row and does not prevent the other rows from being read.
+Connection settings are locked until you disconnect. CAN operations run in a
+worker thread to keep the window responsive.
+
+Defaults are `PCAN_USBBUS1` and `500000` bit/s. The config path is resolved
+relative to the script, so it also works when launched from another directory.
+Optional overrides:
+
+```powershell
+py tools/pcan_config.py --channel PCAN_USBBUS2 --board-id 0x01 --bitrate 500000
+py tools/pcan_config.py --config path/to/config.json
+```
+
+The protocol below applies to all rows: replace the low address byte `01` with
+the setting's address. A successful read may return a firmware default when no
+EEPROM value exists. The current firmware truncates the read reply's high byte;
+the root JSON currently limits settings to 255, but schemas allowing larger
+values require fixing `Config_PackReadReply` for accurate readback. Use one
+config client per board because the protocol has no transaction counter. A
+timed-out write may still have committed; explicitly read before retrying.
+
+Run the hardware-free schema, CAN protocol, and Tkinter lifecycle checks with:
+
+```powershell
+py -m unittest discover -s tools/tests -p test_pcan_config.py -v
+```
+
 # PCAN ADC monitor
 
 `pcan_adc_monitor.py` shows the CAN1 ADC voltage as a live number and scrolling

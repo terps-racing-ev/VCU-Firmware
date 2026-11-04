@@ -176,6 +176,20 @@ LDFLAGS = $(MCU) -specs=nano.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BU
 # default action: build all
 all: $(BUILD_DIR)/$(TARGET).elf $(BUILD_DIR)/$(TARGET).hex $(BUILD_DIR)/$(TARGET).bin
 
+# Host unit tests: make test [data/config managers/can_manager ...]
+.PHONY: test
+test:
+	$(MAKE) -C testing test $(filter-out test,$(MAKECMDGOALS))
+
+# The test Makefile validates and runs selectors passed after "test".
+ifneq ($(filter test,$(MAKECMDGOALS)),)
+TEST_SELECTORS := $(filter-out test all clean,$(MAKECMDGOALS))
+ifneq ($(strip $(TEST_SELECTORS)),)
+.PHONY: $(TEST_SELECTORS)
+$(TEST_SELECTORS): test
+endif
+endif
+
 
 #######################################
 # build the application

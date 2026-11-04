@@ -1,0 +1,15 @@
+:cmock:
+  :mock_path: build/mocks
+  :plugins:
+    - :ignore
+    - :ignore_arg
+    - :callback
+    - :return_thru_ptr
+  :includes_h_pre_orig_header:
+    - <stdbool.h>
+    - <stdint.h>
+  :treat_as:
+    osMessageQueueId_t: PTR
+    osStatus_t: INT
+    HAL_StatusTypeDef: INT
+    EEPROM_StatusTypeDef: INT

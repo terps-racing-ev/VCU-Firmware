@@ -1,9 +1,8 @@
 #include "data/config.h"
-#include "managers/config_manager.h"
 
 const Config_Value_t Config_Values[] = {
     // ID                            Default   Min  Max
-    {CONFIG_DEFAULT_ADDR,               0,      0,     0},
+    {CONFIG_DEFAULT_ADDR,               0,      0,    0},
     {CONFIG_CTRL_CAN_MANAGER_DELAY_MS,  10,     0,  255},
     {CONFIG_DAQ_CAN_MANAGER_DELAY_MS,   10,     0,  255},
     {CONFIG_CONFIG_MANAGER_DELAY_MS,    10,     0,  255},

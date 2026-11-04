@@ -8,9 +8,6 @@
 #define CAN_CONFIG_CMD        0xC0
 #define CAN_CONFIG_REPLY      0xC1
 
-
-
-
 typedef struct
 {
   uint32_t id;

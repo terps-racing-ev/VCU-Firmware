@@ -1,7 +1,6 @@
 #ifndef DATA_CONFIG_H
 #define DATA_CONFIG_H
 
-#include "cmsis_os.h"
 #include "drivers/eeprom.h"
 
 /* Persistent 8-bit virtual addresses. Keep assigned addresses stable across updates. */
