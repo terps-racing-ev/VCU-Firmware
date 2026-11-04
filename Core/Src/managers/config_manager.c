@@ -147,7 +147,7 @@ void Config_PackReadReply(CAN_Message_t *msg, uint8_t vaddr, EEPROM_StatusTypeDe
 
   msg->data[0] = (uint8_t) status;
   msg->data[1] = (uint8_t) value;
-  msg->data[2] = (uint8_t) value >> 8;
+  msg->data[2] = (uint8_t) (value >> 8);
 
   msg->length = 3;
 }
