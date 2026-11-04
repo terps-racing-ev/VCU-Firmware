@@ -7,6 +7,7 @@
 /* CAN IDs */
 #define CAN_CONFIG_CMD        0xC0
 #define CAN_CONFIG_REPLY      0xC1
+#define CAN_RESET_CMD         0xA0
 
 typedef struct
 {

@@ -2,8 +2,11 @@
 #define CAN_MANAGER_H
 
 #include "cmsis_os.h"
-#include "data/can.h"
 #include "main.h"
+
+#include "data/can.h"
+#include "drivers/debug.h"
+
 #include "managers/config_manager.h"
 
 #define MAX_TX_RETRIES 3U
@@ -15,7 +18,8 @@ extern osMessageQueueId_t CTRL_CAN_TxQueueHandle;
 extern osMessageQueueId_t DAQ_CAN_TxQueueHandle;
 
 static const CAN_RxHandler CAN_RxHandlers[] = {
-    Config_RxHandler
+    Config_RxHandler,
+    Reset_RxHandler
 };
 #define CAN_RxHandlers_Size (sizeof(CAN_RxHandlers)/sizeof(CAN_RxHandler))
 

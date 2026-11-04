@@ -88,6 +88,7 @@ C_SOURCES =  \
 Core/Src/data/can.c \
 Core/Src/data/config.c \
 Core/Src/drivers/bootloader.c \
+Core/Src/drivers/debug.c \
 Core/Src/drivers/eeprom.c \
 Core/Src/freertos.c \
 Core/Src/main.c \
