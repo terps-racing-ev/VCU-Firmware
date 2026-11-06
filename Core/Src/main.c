@@ -324,7 +324,7 @@ static void MX_ADC1_Init(void)
 
   /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
   */
-  sConfig.Channel = ADC_CHANNEL_8;
+  sConfig.Channel = ADC_CHANNEL_0;
   sConfig.Rank = 1;
   sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
@@ -482,14 +482,25 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, LD1_Pin|LD2_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOC, LD1_Pin|LD2_Pin|LD2C15_Pin|Batt_Fans_R_IN_Pin
+                          |Batt_Fans_R_DEN_Pin|Rad_Fans_IN_Pin|TSSI_Green_EN_Pin|TSSI_Red_En_Pin
+                          |Brake_Light_EN_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin : LD1_Pin */
-  GPIO_InitStruct.Pin = LD1_Pin;
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOB, Batt_Fans_L_IN_Pin|DRS_IN_Pin|DRS_PWM_Pin|Buzzer_EN_Pin
+                          |Data_Rail_EN_Pin|Data_Rail_Diag_En_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOA, BTG_DEN_Pin|Pump_IN_Pin|Pump_DEN_Pin|RTM_Lamp_Check_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pins : LD1_Pin LD2C15_Pin Batt_Fans_R_IN_Pin Batt_Fans_R_DEN_Pin
+                           Rad_Fans_IN_Pin TSSI_Green_EN_Pin TSSI_Red_En_Pin Brake_Light_EN_Pin */
+  GPIO_InitStruct.Pin = LD1_Pin|LD2C15_Pin|Batt_Fans_R_IN_Pin|Batt_Fans_R_DEN_Pin
+                          |Rad_Fans_IN_Pin|TSSI_Green_EN_Pin|TSSI_Red_En_Pin|Brake_Light_EN_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(LD1_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pin : LD2_Pin */
   GPIO_InitStruct.Pin = LD2_Pin;
@@ -498,10 +509,28 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : PA8 */
-  GPIO_InitStruct.Pin = GPIO_PIN_8;
+  /*Configure GPIO pins : RTD_Pin BSPD_Latched_Pin BSPD_Fault_Pin IMD_Latched_Pin
+                           BMS_Latched_Pin SDC_Post_Buttons_Pin SDC_Post_Raw_Pin SDC_Post_ILs_Pin */
+  GPIO_InitStruct.Pin = RTD_Pin|BSPD_Latched_Pin|BSPD_Fault_Pin|IMD_Latched_Pin
+                          |BMS_Latched_Pin|SDC_Post_Buttons_Pin|SDC_Post_Raw_Pin|SDC_Post_ILs_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : Batt_Fans_L_IN_Pin DRS_IN_Pin DRS_PWM_Pin Buzzer_EN_Pin
+                           Data_Rail_EN_Pin Data_Rail_Diag_En_Pin */
+  GPIO_InitStruct.Pin = Batt_Fans_L_IN_Pin|DRS_IN_Pin|DRS_PWM_Pin|Buzzer_EN_Pin
+                          |Data_Rail_EN_Pin|Data_Rail_Diag_En_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : BTG_DEN_Pin Pump_IN_Pin Pump_DEN_Pin RTM_Lamp_Check_Pin */
+  GPIO_InitStruct.Pin = BTG_DEN_Pin|Pump_IN_Pin|Pump_DEN_Pin|RTM_Lamp_Check_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
