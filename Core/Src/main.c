@@ -107,6 +107,18 @@ const osThreadAttr_t ConfigManager_attributes = {
   .stack_size = sizeof(ConfigManagerBuffer),
   .priority = (osPriority_t) osPriorityLow,
 };
+/* Definitions for StateManager */
+osThreadId_t StateManagerHandle;
+uint32_t StateManagerBuffer[ 128 ];
+osStaticThreadDef_t StateManagerControlBlock;
+const osThreadAttr_t StateManager_attributes = {
+  .name = "StateManager",
+  .cb_mem = &StateManagerControlBlock,
+  .cb_size = sizeof(StateManagerControlBlock),
+  .stack_mem = &StateManagerBuffer[0],
+  .stack_size = sizeof(StateManagerBuffer),
+  .priority = (osPriority_t) osPriorityLow,
+};
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -123,6 +135,7 @@ extern void IO_Manager_Task(void *argument);
 extern void CTRL_CAN_Manager_Task(void *argument);
 extern void DAQ_CAN_Manager_Task(void *argument);
 extern void Config_Manager_Task(void *argument);
+extern void StateManager_Task(void *argument);
 
 /* USER CODE BEGIN PFP */
 
@@ -203,6 +216,9 @@ int main(void)
 
   /* creation of ConfigManager */
   ConfigManagerHandle = osThreadNew(Config_Manager_Task, NULL, &ConfigManager_attributes);
+
+  /* creation of StateManager */
+  StateManagerHandle = osThreadNew(StateManager_Task, NULL, &StateManager_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   if (CTRL_CAN_ManagerInit() != HAL_OK) {
