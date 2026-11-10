@@ -95,6 +95,7 @@ Core/Src/main.c \
 Core/Src/managers/can_manager.c \
 Core/Src/managers/config_manager.c \
 Core/Src/managers/io_manager.c \
+Core/Src/managers/state_manager.c \
 Core/Src/stm32f4xx_hal_msp.c \
 Core/Src/stm32f4xx_hal_timebase_tim.c \
 Core/Src/stm32f4xx_it.c \

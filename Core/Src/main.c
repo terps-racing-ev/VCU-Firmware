@@ -27,6 +27,7 @@
 #include "managers/can_manager.h"
 #include "managers/config_manager.h"
 #include "managers/io_manager.h"
+#include "managers/state_manager.h"
 
 /* USER CODE END Includes */
 
@@ -107,6 +108,18 @@ const osThreadAttr_t ConfigManager_attributes = {
   .stack_size = sizeof(ConfigManagerBuffer),
   .priority = (osPriority_t) osPriorityLow,
 };
+/* Definitions for State_Manager */
+osThreadId_t State_ManagerHandle;
+uint32_t State_ManagerBuffer[ 128 ];
+osStaticThreadDef_t State_ManagerControlBlock;
+const osThreadAttr_t State_Manager_attributes = {
+  .name = "State_Manager",
+  .cb_mem = &State_ManagerControlBlock,
+  .cb_size = sizeof(State_ManagerControlBlock),
+  .stack_mem = &State_ManagerBuffer[0],
+  .stack_size = sizeof(State_ManagerBuffer),
+  .priority = (osPriority_t) osPriorityNormal,
+};
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -123,6 +136,7 @@ extern void IO_Manager_Task(void *argument);
 extern void CTRL_CAN_Manager_Task(void *argument);
 extern void DAQ_CAN_Manager_Task(void *argument);
 extern void Config_Manager_Task(void *argument);
+extern void State_Manager_Task(void *argument);
 
 /* USER CODE BEGIN PFP */
 
@@ -204,6 +218,9 @@ int main(void)
   /* creation of ConfigManager */
   ConfigManagerHandle = osThreadNew(Config_Manager_Task, NULL, &ConfigManager_attributes);
 
+  /* creation of State_Manager */
+  State_ManagerHandle = osThreadNew(State_Manager_Task, NULL, &State_Manager_attributes);
+
   /* USER CODE BEGIN RTOS_THREADS */
   if (CTRL_CAN_ManagerInit() != HAL_OK) {
     Error_Handler();
@@ -215,6 +232,9 @@ int main(void)
     Error_Handler();
   }
   if (Config_Manager_Init() != HAL_OK) {
+    Error_Handler();
+  }
+  if (State_Manager_Init() != HAL_OK) {
     Error_Handler();
   }
   /* USER CODE END RTOS_THREADS */
