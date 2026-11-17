@@ -49,6 +49,8 @@ extern "C" {
 
 /* USER CODE END EM */
 
+void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
+
 /* Exported functions prototypes ---------------------------------------------*/
 void Error_Handler(void);
 
@@ -127,10 +129,8 @@ void Error_Handler(void);
 #define TSSI_Red_En_GPIO_Port GPIOC
 #define Brake_Light_EN_Pin GPIO_PIN_12
 #define Brake_Light_EN_GPIO_Port GPIOC
-#define DRS_IN_Pin GPIO_PIN_3
-#define DRS_IN_GPIO_Port GPIOB
-#define DRS_PWM_Pin GPIO_PIN_4
-#define DRS_PWM_GPIO_Port GPIOB
+#define DRS_EN_Pin GPIO_PIN_3
+#define DRS_EN_GPIO_Port GPIOB
 #define Buzzer_EN_Pin GPIO_PIN_5
 #define Buzzer_EN_GPIO_Port GPIOB
 #define Data_Rail_EN_Pin GPIO_PIN_6

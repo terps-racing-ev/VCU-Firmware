@@ -1,26 +1,26 @@
 {
-  "configurations": [
-    {
-      "name": "STM32",
-      "includePath": [
-        "Core/Inc",
-        "Core/Inc/data",
-        "Core/Inc/drivers",
-        "Core/Inc/managers",
-        "Drivers/CMSIS/Device/ST/STM32F4xx/Include",
-        "Drivers/CMSIS/Include",
-        "Drivers/STM32F4xx_HAL_Driver/Inc",
-        "Drivers/STM32F4xx_HAL_Driver/Inc/Legacy",
-        "Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2",
-        "Middlewares/Third_Party/FreeRTOS/Source/include",
-        "Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F"
-      ],
-      "defines": [
-        "STM32F405xx",
-        "USE_HAL_DRIVER"
-      ],
-      "compilerPath": "c:\\Users\\adisa\\AppData\\Roaming\\Cursor\\User\\globalStorage\\bmd.stm32-for-vscode\\@xpack-dev-tools\\arm-none-eabi-gcc\\15.2.1-1.1.1\\.content\\bin\\arm-none-eabi-gcc.EXE"
-    }
-  ],
-  "version": 4
+    "configurations": [
+        {
+            "name": "STM32",
+            "includePath": [
+                "Core/Inc",
+                "Core/Inc/data",
+                "Core/Inc/drivers",
+                "Core/Inc/managers",
+                "Drivers/CMSIS/Device/ST/STM32F4xx/Include",
+                "Drivers/CMSIS/Include",
+                "Drivers/STM32F4xx_HAL_Driver/Inc",
+                "Drivers/STM32F4xx_HAL_Driver/Inc/Legacy",
+                "Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2",
+                "Middlewares/Third_Party/FreeRTOS/Source/include",
+                "Middlewares/Third_Party/FreeRTOS/Source/portable/GCC/ARM_CM4F"
+            ],
+            "defines": [
+                "STM32F405xx",
+                "USE_HAL_DRIVER"
+            ],
+            "compilerPath": "C:/cygwin64/bin/gcc.exe"
+        }
+    ],
+    "version": 4
 }

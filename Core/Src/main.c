@@ -52,6 +52,8 @@ ADC_HandleTypeDef hadc2;
 CAN_HandleTypeDef hcan1;
 CAN_HandleTypeDef hcan2;
 
+TIM_HandleTypeDef htim3;
+
 /* Definitions for defaultTask */
 osThreadId_t defaultTaskHandle;
 const osThreadAttr_t defaultTask_attributes = {
@@ -118,6 +120,7 @@ static void MX_ADC1_Init(void);
 static void MX_CAN1_Init(void);
 static void MX_CAN2_Init(void);
 static void MX_ADC2_Init(void);
+static void MX_TIM3_Init(void);
 void StartDefaultTask(void *argument);
 extern void IO_Manager_Task(void *argument);
 extern void CTRL_CAN_Manager_Task(void *argument);
@@ -166,6 +169,7 @@ int main(void)
   MX_CAN1_Init();
   MX_CAN2_Init();
   MX_ADC2_Init();
+  MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
   /* USER CODE END 2 */
 
@@ -464,6 +468,65 @@ static void MX_CAN2_Init(void)
 }
 
 /**
+  * @brief TIM3 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM3_Init(void)
+{
+
+  /* USER CODE BEGIN TIM3_Init 0 */
+
+  /* USER CODE END TIM3_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+  TIM_OC_InitTypeDef sConfigOC = {0};
+
+  /* USER CODE BEGIN TIM3_Init 1 */
+
+  /* USER CODE END TIM3_Init 1 */
+  htim3.Instance = TIM3;
+  htim3.Init.Prescaler = 0;
+  htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim3.Init.Period = 8399;
+  htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
+  if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim3, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_TIM_PWM_Init(&htim3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sConfigOC.OCMode = TIM_OCMODE_PWM1;
+  sConfigOC.Pulse = 0;
+  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+  if (HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM3_Init 2 */
+
+  /* USER CODE END TIM3_Init 2 */
+  HAL_TIM_MspPostInit(&htim3);
+
+}
+
+/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
@@ -487,8 +550,8 @@ static void MX_GPIO_Init(void)
                           |TSSI_Red_En_Pin|Brake_Light_EN_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, Batt_Fans_L_IN_Pin|DRS_IN_Pin|DRS_PWM_Pin|Buzzer_EN_Pin
-                          |Data_Rail_EN_Pin|Data_Rail_Diag_En_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, Batt_Fans_L_IN_Pin|DRS_EN_Pin|Buzzer_EN_Pin|Data_Rail_EN_Pin
+                          |Data_Rail_Diag_En_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOA, BTG_DEN_Pin|Pump_IN_Pin|Pump_DEN_Pin|RTM_Lamp_Check_Pin, GPIO_PIN_RESET);
@@ -519,10 +582,10 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : Batt_Fans_L_IN_Pin DRS_IN_Pin DRS_PWM_Pin Buzzer_EN_Pin
-                           Data_Rail_EN_Pin Data_Rail_Diag_En_Pin */
-  GPIO_InitStruct.Pin = Batt_Fans_L_IN_Pin|DRS_IN_Pin|DRS_PWM_Pin|Buzzer_EN_Pin
-                          |Data_Rail_EN_Pin|Data_Rail_Diag_En_Pin;
+  /*Configure GPIO pins : Batt_Fans_L_IN_Pin DRS_EN_Pin Buzzer_EN_Pin Data_Rail_EN_Pin
+                           Data_Rail_Diag_En_Pin */
+  GPIO_InitStruct.Pin = Batt_Fans_L_IN_Pin|DRS_EN_Pin|Buzzer_EN_Pin|Data_Rail_EN_Pin
+                          |Data_Rail_Diag_En_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
