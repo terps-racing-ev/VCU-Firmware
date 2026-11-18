@@ -1,6 +1,16 @@
-#include "io.h"
+#include "data/io.h"
+
+EFuse batt_fans_L_efuse = {0};
+EFuse batt_fans_R_efuse = {0};
+EFuse rad_fans_efuse = {0};
+EFuse pump_efuse = {0};
+EFuse drs_efuse = {0};
 
 //Add things like these for each i/o so it aligns with a struct \/
+AnalogIO lv_current_raw = {0};
+Current lv_current = {0};
+AnalogIO hv_current_raw = {0};
+Current hv_current = {0};
 //DigitalIO bms_fault = {0};
 //AnalogIO cs_low_raw = {0};
 
@@ -56,8 +66,8 @@ HAL_StatusTypeDef IO_InitEFuse(
     if (efuse == NULL ||
         mutex_name == NULL ||
         in_port == NULL ||
-        den_port == NULL ||
-        adc == NULL) {
+        adc == NULL ||
+        ((den_port == NULL) != (den_pin == 0U))) {
         return HAL_ERROR;
     }
 
@@ -89,5 +99,29 @@ HAL_StatusTypeDef IO_InitEFuse(
     efuse->status = EFUSE_STATUS_OFF;
     efuse->last_updated = 0U;
 
+    return HAL_OK;
+}
+
+HAL_StatusTypeDef IO_SetEFuseCommand(EFuse *efuse, bool command)
+{
+    if (efuse == NULL || efuse->mutex == NULL || efuse->in_port == NULL) {
+        return HAL_ERROR;
+    }
+
+    if (osMutexAcquire(efuse->mutex, osWaitForever) != osOK) {
+        return HAL_ERROR;
+    }
+
+    HAL_GPIO_WritePin(
+        efuse->in_port,
+        efuse->in_pin,
+        command ? GPIO_PIN_SET : GPIO_PIN_RESET);
+
+    efuse->command = command;
+    efuse->output_enabled = command;
+    efuse->status = command ? EFUSE_STATUS_ON : EFUSE_STATUS_OFF;
+    efuse->last_updated = HAL_GetTick();
+
+    (void)osMutexRelease(efuse->mutex);
     return HAL_OK;
 }

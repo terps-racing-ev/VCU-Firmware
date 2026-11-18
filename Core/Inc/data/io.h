@@ -57,10 +57,11 @@ typedef enum {
 typedef struct {
     osMutexId_t mutex;
 
-    /* Hardware mapping */
+    /* eFuse command mapping: BTG IN or DRS EN */
     GPIO_TypeDef *in_port;
     uint16_t in_pin;
 
+    /* Optional diagnostic enable. Set both fields to zero when unused. */
     GPIO_TypeDef *den_port;
     uint16_t den_pin;
 
@@ -99,15 +100,15 @@ void IO_SetDigitalIO(DigitalIO *dio, bool value);
 void IO_SetAnalogIO(AnalogIO *aio, uint16_t value);
 void IO_SetCurrent(Current *c, int32_t value);
 void IO_SetVSense(VSense_t *v, uint32_t value);
-void IO_SetEFuseCommand(EFuse *efuse, bool command);
+HAL_StatusTypeDef IO_SetEFuseCommand(EFuse *efuse, bool command);
 
 //SDC Inputs
 extern DigitalIO bspd_latched;
 extern DigitalIO bspd_fault; //Is this SDC
 extern DigitalIO imd_latched;
 extern DigitalIO bms_latched;
-extern AnalogIO sdc_post_raw;
-extern AnalogIO sdc_post_ils;
+extern DigitalIO sdc_post_raw;
+extern DigitalIO sdc_post_ils;
 extern DigitalIO sdc_post_buttons;
 extern DigitalIO rtm_lamp_check;
 //VCU
@@ -118,30 +119,30 @@ extern DigitalIO TSSI_red;
 extern DigitalIO brake_light;
 extern DigitalIO buzzer;
 extern DigitalIO data_rail_enable;
-extern DigitalIO data_rail_diag_enable;
+extern DigitalIO data_rail_den;
 extern AnalogIO apps1;
 extern AnalogIO apps2;
 extern AnalogIO front_brake_pressure;
 extern AnalogIO rear_brake_pressure;
-extern AnalogIO current_sense_12;
-extern AnalogIO batt_fans_l_current;
-extern AnalogIO batt_fans_r_current;
-extern AnalogIO rad_fans_current;
-extern AnalogIO pump_current;
-extern AnalogIO drs_current;
-extern AnalogIO output_voltage_5;
-extern AnalogIO data_rail_voltage;
+extern AnalogIO current_sense_12v_raw;
+extern Current current_sense_12v;
+extern AnalogIO output_voltage_5v_raw;
+extern Current current_sense_5v;
+extern AnalogIO data_rail_sns;
 
+extern AnalogIO lv_current_raw;
 extern Current lv_current;
+extern AnalogIO hv_current_raw;
 extern Current hv_current;
 
 extern VSense_t output_v_sense_5;
 
-extern EFuse batt_fans_l_efuse;
-extern EFuse batt_fans_r_efuse;
+extern EFuse batt_fans_L_efuse;
+extern EFuse batt_fans_R_efuse;
 extern EFuse rad_fans_efuse;
 extern EFuse pump_efuse;
 extern EFuse drs_efuse;
+/* PB3 DRS_EN and ADC1 channel 14 (PC4 DRS_IS). PWM is separate. */
 
 //BTG Outputs \/
 //Acc fans already have defined algorithm, left and right cant be on at the same time
@@ -153,6 +154,5 @@ extern EFuse drs_efuse;
 //BTG_DEN, diagnostic enable, whole additional project, not the most needed
 //pump_in
 //pump_DEN currently just rtd, can expand to power (need historesis)
-//drs_in, might need stall current (always slightly on)
-//drs_DEN_pwm, efuse does not equal
+//DRS EN and IS belong to drs_efuse; PB4 PWM is not an eFuse DEN signal
 #endif /* IO_H */

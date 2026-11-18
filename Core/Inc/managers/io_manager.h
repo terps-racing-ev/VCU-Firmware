@@ -24,8 +24,5 @@ void IO_Manager_Task(void *argument);
 HAL_StatusTypeDef IO_SetDRSPWM(
     bool enabled,
     uint16_t duty_permille);
-HAL_StatusTypeDef IO_SetDRSPWM(
-    bool enabled,
-    uint16_t duty_permille);
 
 #endif /* IO_MANAGER_H */

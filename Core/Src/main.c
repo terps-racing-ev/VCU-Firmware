@@ -545,23 +545,20 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, LD1_Pin|LD2_Pin|LD2C15_Pin|Batt_Fans_L_DEN_Pin
-                          |Batt_Fans_R_IN_Pin|Batt_Fans_R_DEN_Pin|Rad_Fans_IN_Pin|TSSI_Green_EN_Pin
-                          |TSSI_Red_En_Pin|Brake_Light_EN_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOC, LD1_Pin|LD2_Pin|LD2C15_Pin|Batt_Fans_R_IN_Pin
+                          |Rad_Fans_IN_Pin|TSSI_Green_EN_Pin|TSSI_Red_En_Pin|Brake_Light_EN_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, Batt_Fans_L_IN_Pin|DRS_EN_Pin|Buzzer_EN_Pin|Data_Rail_EN_Pin
                           |Data_Rail_Diag_En_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, BTG_DEN_Pin|Pump_IN_Pin|Pump_DEN_Pin|RTM_Lamp_Check_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, BTG_DEN_Pin|Pump_IN_Pin|Misc_GPIO_3v3_Pin|RTM_Lamp_Check_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : LD1_Pin LD2C15_Pin Batt_Fans_L_DEN_Pin Batt_Fans_R_IN_Pin
-                           Batt_Fans_R_DEN_Pin Rad_Fans_IN_Pin TSSI_Green_EN_Pin TSSI_Red_En_Pin
-                           Brake_Light_EN_Pin */
-  GPIO_InitStruct.Pin = LD1_Pin|LD2C15_Pin|Batt_Fans_L_DEN_Pin|Batt_Fans_R_IN_Pin
-                          |Batt_Fans_R_DEN_Pin|Rad_Fans_IN_Pin|TSSI_Green_EN_Pin|TSSI_Red_En_Pin
-                          |Brake_Light_EN_Pin;
+  /*Configure GPIO pins : LD1_Pin LD2C15_Pin Batt_Fans_R_IN_Pin Rad_Fans_IN_Pin
+                           TSSI_Green_EN_Pin TSSI_Red_En_Pin Brake_Light_EN_Pin */
+  GPIO_InitStruct.Pin = LD1_Pin|LD2C15_Pin|Batt_Fans_R_IN_Pin|Rad_Fans_IN_Pin
+                          |TSSI_Green_EN_Pin|TSSI_Red_En_Pin|Brake_Light_EN_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -591,8 +588,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : BTG_DEN_Pin Pump_IN_Pin Pump_DEN_Pin RTM_Lamp_Check_Pin */
-  GPIO_InitStruct.Pin = BTG_DEN_Pin|Pump_IN_Pin|Pump_DEN_Pin|RTM_Lamp_Check_Pin;
+  /*Configure GPIO pins : BTG_DEN_Pin Pump_IN_Pin Misc_GPIO_3v3_Pin RTM_Lamp_Check_Pin */
+  GPIO_InitStruct.Pin = BTG_DEN_Pin|Pump_IN_Pin|Misc_GPIO_3v3_Pin|RTM_Lamp_Check_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
