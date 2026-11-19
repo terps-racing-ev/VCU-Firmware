@@ -1,4 +1,4 @@
-STATE MANAGER PLAN (VCU-Firmware)
+    STATE MANAGER PLAN (VCU-Firmware)
 =================================
 
 Sources used for this plan:
@@ -390,7 +390,7 @@ static uint32_t rtd_sound_start = 0U;
 static bool     was_red_car     = false;
 
 /* ---- (d) Private function prototypes (HVC uses a leading underscore). */
-static void            _State_ReadInputs(State_Inputs_t *in);
+
 static VCU_ErrorMask_t _State_CheckErrors(const State_Inputs_t *in);
 static VCU_State_t     _State_Transition(VCU_State_t curr,
                                          VCU_ErrorMask_t errors,
