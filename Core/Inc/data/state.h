@@ -1,5 +1,5 @@
 #include <stdint.h>
-#include "stm32f4xx_hal.h""
+#include "stm32f4xx_hal.h"
 
 typedef enum {
     VCU_STATE_LAMP_CHECK = 0,
@@ -23,8 +23,13 @@ typedef enum {
     VCU_ERR_BAP = 5, 
 } ErrorBits;
 
+extern struct {
+    VCU_state state;
+    ErrorBits error_mask;
+} VCU_Info;
 
 #define SET_ERROR(mask, bit) (mask) |= ((ErrorMask)1U << (uint32_t)(bit))    
+
 HAL_StatusTypeDef State_InitState(void);
 void State_GetState(VCU_state *state);
 void State_SetState(VCU_state new_state);
